@@ -17,6 +17,7 @@ using Random
                 @test length(chd) == length(keys)
                 @test all(get(chd, k, nothing) == v for (k, v) in zip(keys, vals))
                 @test all(getkey(chd, k, nothing) == k for k in keys)
+                @test all(k in keys(chd) for k in keys)
                 if n == 0
                     @test isempty(chd)
                 else

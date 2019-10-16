@@ -92,6 +92,6 @@ end
 
 CHD(; kwargs...) = CHD{Any, Any}(; kwargs...)
 CHD(kv::Tuple{}; kwargs...) = CHD(; kwargs...)
-copy(d::CHD{K,V}) where {K, V} = CHD{K, V}(copy(d.slots), copy(d.keys), copy(d.vals), d.count, copy(d.r), copy(d.indices))
+copy(d::CHD{K,V}) where {K, V} = CHD{K, V}(copy(d.slots), Base.copy(d.keys), copy(d.vals), d.count, copy(d.r), copy(d.indices))
 CHD(ps::Pair{K, V}...; kwargs...) where {K, V} = CHD{K, V}(ps; kwargs...)
 CHD(ps::Pair...; kwargs...)                    = CHD(ps; kwargs...)

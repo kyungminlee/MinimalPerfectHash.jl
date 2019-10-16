@@ -19,6 +19,7 @@ after_success:
 jobs:
   include:
     - stage: Documentation
+      os: linux
       julia: 1.2
       script: julia --project=docs -e '
           using Pkg;

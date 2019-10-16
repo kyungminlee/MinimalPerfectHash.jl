@@ -10,6 +10,7 @@ using Random
                 ks = collect(Set(Random.rand(K, n)))
                 vs = rand(V, length(ks))
                 chd = MinimalPerfectHash.CHD((k, v) for (k, v) in zip(ks, vs))
+                chd = MinimalPerfectHash.CHD{K, V}((k, v) for (k, v) in zip(ks, vs))
 
                 @test all(haskey(chd, k) for k in ks)
                 @test all((k => v) in chd for (k, v) in zip(ks, vs))

@@ -28,6 +28,9 @@ using Random
         @test typeof(chd) == MinimalPerfectHash.CHD{String, String}
         MinimalPerfectHash.CHD{UInt, Int}(0x1 => 2)
         MinimalPerfectHash.CHD(UInt8(1) => 2, UInt16(2) => 3, UInt(3) => 10)
+        chd2 = copy(chd)
+        @test chd2 !== chd
+        @test chd2 == chd
     end
 
     @testset "Exceptions" begin

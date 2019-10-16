@@ -9,7 +9,7 @@ using Random
             for n in [0, 1, 2, 3, 4, 5, 8, 9, 27, 32, 33, 64, 65, 1024, 1025, 65536, 65537]
                 ks = collect(Set(Random.rand(K, n)))
                 vs = rand(V, length(ks))
-                chd = MinimalPerfectHash.CHD(ks, vs)
+                chd = MinimalPerfectHash.CHD((k, v) for (k, v) in zip(ks, vs))
 
                 @test all(haskey(chd, k) for k in ks)
                 @test all((k => v) in chd for (k, v) in zip(ks, vs))

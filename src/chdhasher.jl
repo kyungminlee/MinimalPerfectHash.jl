@@ -14,8 +14,7 @@ mutable struct Bucket{K,V}
 end
 
 function ChdHasher(size ::UInt64, buckets ::UInt64; rng ::Random.AbstractRNG=Random.GLOBAL_RNG)
-  c = ChdHasher([rand(rng, UInt64)], size, buckets, rng)
-  return c
+  return ChdHasher([rand(rng, UInt64)], size, buckets, rng)
 end
 
 function hash_index_from_key(h ::ChdHasher, k ::K) ::UInt64 where K
@@ -29,16 +28,3 @@ end
 function generate(c ::ChdHasher) :: Tuple{UInt16, UInt64}
     return UInt16(length(c.r)), rand(c.rng, UInt64)
 end
-
-# function add!(c ::ChdHasher, r ::UInt64)
-#     push!(c.r, r)
-# end
-
-# import Base.length
-# function length(c ::ChdHasher)
-#     return length(c.r)
-# end
-
-# function Base.show(io ::IO, h ::ChdHasher)
-#     print(io, "ChdHasher{size: $h.size, buckets: $h.buckets, r: $h.r}")
-# end

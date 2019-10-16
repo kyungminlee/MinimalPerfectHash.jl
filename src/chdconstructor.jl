@@ -59,10 +59,10 @@ function CHD{K, V}(kv;
     end
     next_bucket && continue
 
-    error("Failed to find a collision-free hash function after $(max_collisions) attempts, "
-    "for bucket $i/$(length(buckets)) with $(length(bucket.keys)) entries."
-    "max bucket collisions: $(collisions), "
-    "keys: $count, "
+    error("Failed to find a collision-free hash function after $(max_collisions) attempts, " *
+    "for bucket $i/$(length(buckets)) with $(length(bucket.keys)) entries." *
+    "max bucket collisions: $(collisions), " *
+    "keys: $count, " *
     "hash functions: $(length(hasher.r))")
   end
 

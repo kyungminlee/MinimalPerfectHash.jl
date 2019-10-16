@@ -12,6 +12,13 @@ using Random
         for (_, _) in chd
             @test false
         end
+        chd = MinimalPerfectHash.CHD( () )
+        @test typeof(chd) == MinimalPerfectHash.CHD{Any, Any}
+        @test length(chd) == 0
+        for (_, _) in chd
+            @test false
+        end
+
     end
 
     let

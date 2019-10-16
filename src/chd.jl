@@ -8,12 +8,6 @@ struct CHD{K, V} <:AbstractDict{K, V}
   indices ::Vector{UInt16}
 end
 
-function Base.getindex(c ::CHD{K, V}, key) where {K, V}
-  ti = chd_keyindex(c, K(key))
-  @boundscheck ti == 0 && throw(KeyError("key $key not found"))
-  return c.vals[ti]
-end
-
 """
 one-based. zero means not found
 """
@@ -34,6 +28,11 @@ function chd_keyindex(c ::CHD{K, V}, key ::K) ::Int where {K, V}
   return ti+1
 end
 
+function Base.getindex(c ::CHD{K, V}, key) where {K, V}
+  ti = chd_keyindex(c, K(key))
+  @boundscheck ti == 0 && throw(KeyError("key $key not found"))
+  return c.vals[ti]
+end
 
 function Base.length(c ::CHD) ::Int
   return c.count

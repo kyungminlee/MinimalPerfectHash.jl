@@ -1,9 +1,9 @@
 import Primes
 
 #=
-function CHD(the_keys ::AbstractVector{K},
-             the_vals::AbstractVector{V};
-             max_collisions::Integer=16777216) :: CHD{K, V} where {K, V}
+function _CHD{K, V}(the_keys ::AbstractVector{K},
+                    the_vals::AbstractVector{V};
+                    max_collisions::Integer=16777216) :: CHD{K, V} where {K, V}
   n ::UInt64 = max(17, UInt64(length(the_keys)))
   n = Primes.nextprime(n)
   m ::UInt64 = n ÷ 2
@@ -73,7 +73,8 @@ end
 
 function CHD{K, V}(kv;
                    max_collisions::Integer=16777216) where {K, V}
-  n ::UInt64 = max(17, UInt64(length(kv)))
+  count = length(kv)
+  n ::UInt64 = max(17, UInt64(count))
   n = Primes.nextprime(n)
   m ::UInt64 = n ÷ 2
 
@@ -130,21 +131,21 @@ function CHD{K, V}(kv;
     next_bucket && continue
 
     @warn "max bucket collisions: $(collisions)"
-    @warn "keys: $(length(kv))"
+    @warn "keys: $count"
     @warn "hash functions: $(length(hasher.r))"
 
     @assert false "Failed to find a collision-free hash function after $(max_collisions) attempts, for bucket $i/$(length(buckets)) with $(length(bucket.keys)) entries"
   end
 
-  return CHD{K, V}(slots, keys, vals, length(kv), hasher.r, indices)
+  return CHD{K, V}(slots, keys, vals, count, hasher.r, indices)
 end
 
 
-function CHD{K, V}(p::Pair; kwargs...) where {K, V}
+function CHD{K, V}(p::Pair; kwargs...) ::CHD{K, V} where {K, V}
   return CHD{K, V}([(p.first, p.second)])
 end
 
-function CHD{K, V}(ps::Pair...; kwargs...) where V where K
+function CHD{K, V}(ps::Pair...; kwargs...) ::CHD{K, V} where V where K
   return CHD{K, V}(ps; kwargs...)
 end
 

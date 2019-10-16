@@ -60,10 +60,10 @@ function CHD{K, V}(kv;
     next_bucket && continue
 
     error("Failed to find a collision-free hash function after $(max_collisions) attempts, " *
-    "for bucket $i/$(length(buckets)) with $(length(bucket.keys)) entries." *
-    "max bucket collisions: $(collisions), " *
-    "keys: $count, " *
-    "hash functions: $(length(hasher.r))")
+          "for bucket $i/$(length(buckets)) with $(length(bucket.keys)) entries." *
+          "max bucket collisions: $(collisions), " *
+          "keys: $count, " *
+          "hash functions: $(length(hasher.r))")
   end
 
   return CHD{K, V}(slots, keys, vals, count, hasher.r, indices)
@@ -95,36 +95,3 @@ CHD(kv::Tuple{}; kwargs...) = CHD(; kwargs...)
 copy(d::CHD{K,V}; kwargs...) where {K, V} = CHD{K, V}(d; kwargs...)
 CHD(ps::Pair{K, V}...; kwargs...) where {K, V} = CHD{K, V}(ps; kwargs...)
 CHD(ps::Pair...; kwargs...)                    = CHD(ps; kwargs...)
-
-function try_hash(
-    hasher ::ChdHasher,
-    seen ::Set{UInt64},
-
-    slots ::Vector{Bool},
-    keys ::Vector{K},
-    vals ::Vector{V},
-    indices ::Vector{UInt16},
-    bucket ::Bucket{K, V},
-    ri ::UInt16,
-    r ::UInt64
-  ) where {K, V}
-
-  duplicate = Set{UInt64}()
-  hashes = Vector{UInt64}(undef, length(bucket.keys))
-  for (i, k) in enumerate(bucket.keys)
-    h = table(hasher, r, k)
-    hashes[i] = h
-    (h in seen) && return false
-    (h in duplicate) && return false
-    push!(duplicate, h)
-  end
-  union!(seen, hashes)
-  indices[bucket.index+1] = ri
-
-  for (i, h) in enumerate(hashes)
-    slots[h+1] = true
-    keys[h+1] = bucket.keys[i]
-    vals[h+1] = bucket.vals[i]
-  end
-  return true
-end

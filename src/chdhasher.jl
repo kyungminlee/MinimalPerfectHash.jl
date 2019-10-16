@@ -28,3 +28,36 @@ end
 function generate(c ::ChdHasher) :: Tuple{UInt16, UInt64}
     return UInt16(length(c.r)), rand(c.rng, UInt64)
 end
+
+function try_hash(
+    hasher ::ChdHasher,
+    seen ::Set{UInt64},
+
+    slots ::Vector{Bool},
+    keys ::Vector{K},
+    vals ::Vector{V},
+    indices ::Vector{UInt16},
+    bucket ::Bucket{K, V},
+    ri ::UInt16,
+    r ::UInt64
+  ) where {K, V}
+
+  duplicate = Set{UInt64}()
+  hashes = Vector{UInt64}(undef, length(bucket.keys))
+  for (i, k) in enumerate(bucket.keys)
+    h = table(hasher, r, k)
+    hashes[i] = h
+    (h in seen) && return false
+    (h in duplicate) && return false
+    push!(duplicate, h)
+  end
+  union!(seen, hashes)
+  indices[bucket.index+1] = ri
+
+  for (i, h) in enumerate(hashes)
+    slots[h+1] = true
+    keys[h+1] = bucket.keys[i]
+    vals[h+1] = bucket.vals[i]
+  end
+  return true
+end

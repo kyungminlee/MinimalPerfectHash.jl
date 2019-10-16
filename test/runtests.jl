@@ -19,10 +19,13 @@ using Random
         @test typeof(chd) == MinimalPerfectHash.CHD{Int, String}
         chd = MinimalPerfectHash.CHD("Hello" => "World")
         @test typeof(chd) == MinimalPerfectHash.CHD{String, String}
+        MinimalPerfectHash.CHD{UInt, Int}(0x1 => 2)
+        MinimalPerfectHash.CHD(UInt8(1) => 2, UInt16(2) => 3, UInt(3) => 10)
     end
 
     @testset "Exceptions" begin
         @test_throws ArgumentError MinimalPerfectHash.CHD(1=>2, 1=>3)
+        @test_throws ArgumentError MinimalPerfectHash.CHD([1,2,3])
     end
 
     for K in [Int, UInt8, UInt64, Float64]

@@ -1,11 +1,16 @@
 import Primes
 
 function CHD{K, V}(kv;
-                   max_collisions::Integer=16777216) where {K, V}
+                   max_collisions::Integer=16777216,
+                   gamma::Real=1.25) where {K, V}
+  !(gamma >= 1.0) && throw(ArgumentError("gamma needs to be no less than 1"))
   count = length(kv)
-  n ::UInt64 = max(17, UInt64(count))
+  n ::UInt64 = max(17, UInt64(ceil(count * gamma)))
+  n < count && throw(OverflowError("count * gamma is bigger than typemax(UInt64)"))
+  #@info "Finding nextprime($n)"
   n = Primes.nextprime(n)
-  m ::UInt64 = n ÷ 2
+  #@info "The prime is $n"
+  m ::UInt64 = Primes.nextprime(n ÷ 2)
 
   slots = zeros(Bool, n)
   keys = Vector{K}(undef, n)
@@ -15,27 +20,48 @@ function CHD{K, V}(kv;
   indices = [~UInt16(0) for i in 1:m]
 
   seen = Set{UInt64}()
-  duplicates = Set{K}()
+  #duplicates = Set{K}()
 
-  for (key, val) in kv
-    (key in duplicates) && throw(ArgumentError("duplicate key $(string(key))"))
-    push!(duplicates, key)
-
-    oh = hash_index_from_key(hasher, key)
-    buckets[oh+1].index = oh
-    push!(buckets[oh+1].keys, key)
-    push!(buckets[oh+1].vals, val)
+  if false
+    @info "Checking duplicates"
+    duplicates = Set{K}([key for (key, val) in kv])
+    if length(kv) != length(duplicates)
+      throw(ArgumentError("contains duplicate keys"))
+    end
+    @info "OK"
   end
+  #(key in duplicates) && throw(ArgumentError("duplicate key $(string(key))"))
 
+  @info "Starting bucketing"
+  for (key, val) in kv
+    oh = hash_index_from_key(hasher, key)
+    @inbounds bucket = buckets[oh+1]
+    bucket.index = oh
+    push!(bucket.keys, key)
+    push!(bucket.vals, val)
+  end
+  @info "Finished bucketing"
+
+  @info "Remove empty buckets"
+  filter!((arg::Bucket{K,V}) -> !isempty(arg.keys), buckets)
+
+  @info "Sorting buckets"
   collisions = 0
   sort!(buckets;
-        lt=(lhs::Bucket{K,V}, rhs::Bucket{K,V}) -> length(lhs.keys) < length(rhs.keys),
-        rev=true)
+        lt=(lhs::Bucket{K,V}, rhs::Bucket{K,V}) -> length(lhs.keys) < length(rhs.keys))
+  @info "Sorted buckets"
 
   # resolve each bucket
-  for (i, bucket) in enumerate(buckets)
-    isempty(bucket.keys) && continue
+  i = 0
+  while !isempty(buckets)
+    i += 1
+    bucket = pop!(buckets)
+  #for (i, bucket) in enumerate(buckets)
+    #isempty(bucket.keys) && continue
     next_bucket = false
+    if i % 10000 == 0
+      @info "Working on bucket $i"
+    end
 
     for (ri, r) in enumerate(hasher.r)
       # works with the existing r
@@ -65,6 +91,7 @@ function CHD{K, V}(kv;
           "keys: $count, " *
           "hash functions: $(length(hasher.r))")
   end
+  Base.GC.gc()
 
   return CHD{K, V}(slots, keys, vals, count, hasher.r, indices)
 end

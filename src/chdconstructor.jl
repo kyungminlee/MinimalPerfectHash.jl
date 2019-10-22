@@ -2,7 +2,8 @@ import Primes
 
 function CHD{K, V}(kv;
                    max_collisions::Integer=16777216,
-                   gamma::Real=1.25) where {K, V}
+                   gamma::Real=1.25,
+                   check_duplicates::Bool=true) where {K, V}
   !(gamma >= 1.0) && throw(ArgumentError("gamma needs to be no less than 1"))
   count = length(kv)
   n ::UInt64 = max(17, UInt64(ceil(count * gamma)))
@@ -20,19 +21,15 @@ function CHD{K, V}(kv;
   indices = [~UInt16(0) for i in 1:m]
 
   seen = Set{UInt64}()
-  #duplicates = Set{K}()
 
-  if false
-    @info "Checking duplicates"
-    duplicates = Set{K}([key for (key, val) in kv])
-    if length(kv) != length(duplicates)
-      throw(ArgumentError("contains duplicate keys"))
+  if check_duplicates
+    duplicates = Set{K}()
+    for (key, val) in kv
+      (key in duplicates) && throw(ArgumentError("duplicate key $(string(key))"))
+      push!(duplicates, key)
     end
-    @info "OK"
   end
-  #(key in duplicates) && throw(ArgumentError("duplicate key $(string(key))"))
 
-  @info "Starting bucketing"
   for (key, val) in kv
     oh = hash_index_from_key(hasher, key)
     @inbounds bucket = buckets[oh+1]
@@ -40,28 +37,19 @@ function CHD{K, V}(kv;
     push!(bucket.keys, key)
     push!(bucket.vals, val)
   end
-  @info "Finished bucketing"
 
-  @info "Remove empty buckets"
   filter!((arg::Bucket{K,V}) -> !isempty(arg.keys), buckets)
 
-  @info "Sorting buckets"
   collisions = 0
   sort!(buckets;
         lt=(lhs::Bucket{K,V}, rhs::Bucket{K,V}) -> length(lhs.keys) < length(rhs.keys))
-  @info "Sorted buckets"
 
   # resolve each bucket
   i = 0
   while !isempty(buckets)
     i += 1
     bucket = pop!(buckets)
-  #for (i, bucket) in enumerate(buckets)
-    #isempty(bucket.keys) && continue
     next_bucket = false
-    if i % 10000 == 0
-      @info "Working on bucket $i"
-    end
 
     for (ri, r) in enumerate(hasher.r)
       # works with the existing r
@@ -91,7 +79,6 @@ function CHD{K, V}(kv;
           "keys: $count, " *
           "hash functions: $(length(hasher.r))")
   end
-  Base.GC.gc()
 
   return CHD{K, V}(slots, keys, vals, count, hasher.r, indices)
 end

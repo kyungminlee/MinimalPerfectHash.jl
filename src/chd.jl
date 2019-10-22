@@ -2,14 +2,14 @@ struct CHD{K, V} <:AbstractDict{K, V}
   slots ::Vector{Bool}
   keys ::Vector{K}
   vals ::Vector{V}
-  count::Int
+  count ::Int
 
   r ::Vector{UInt64}
   indices ::Vector{UInt16}
 end
 
 """
-one-based. zero means not found
+one-based. negative means not found
 """
 function chd_keyindex(c ::CHD{K, V}, key ::K) ::Int where {K, V}
   r0 = c.r[1]
@@ -17,13 +17,13 @@ function chd_keyindex(c ::CHD{K, V}, key ::K) ::Int where {K, V}
   i = h % UInt64(length(c.indices))
   ri = c.indices[i+1]
 
-  ri >= UInt16(length(c.r)) && return 0
+  ri >= UInt16(length(c.r)) && return -1
 
   r = c.r[ri+1]
   ti = (h ⊻ r) % UInt64(length(c.keys))
 
-  (!c.slots[ti+1]) && return 0
-  (c.keys[ti+1] != key) && return 0
+  (!c.slots[ti+1]) && return -1
+  (c.keys[ti+1] != key) && return -1
 
   return ti+1
 end

@@ -30,7 +30,7 @@ end
 
 @inline function Base.getindex(c ::CHD{K, V}, key) where {K, V}
   ti = chd_keyindex(c, K(key))
-  @boundscheck ti <= 0 && throw(KeyError("key $key not found"))
+  ti <= 0 && throw(KeyError("key $key not found"))
   return c.vals[ti]
 end
 

@@ -13,7 +13,7 @@ function CHD{K, V}(kv;
   #@info "The prime is $n"
   m ::UInt64 = Primes.nextprime(n ÷ 2)
 
-  slots = zeros(Bool, n)
+  slots = zeros(UInt8, n)
   keys = Vector{K}(undef, n)
   vals = Vector{V}(undef, n)
   hasher = ChdHasher(n, m)

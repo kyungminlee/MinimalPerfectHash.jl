@@ -33,7 +33,7 @@ function try_hash(
     hasher ::ChdHasher,
     seen ::Set{UInt64},
 
-    slots ::Vector{Bool},
+    slots ::Vector{UInt8},
     keys ::Vector{K},
     vals ::Vector{V},
     indices ::Vector{UInt16},
@@ -55,7 +55,7 @@ function try_hash(
   indices[bucket.index+1] = ri
 
   for (i, h) in enumerate(hashes)
-    slots[h+1] = true
+    slots[h+1] = 0x1
     keys[h+1] = bucket.keys[i]
     vals[h+1] = bucket.vals[i]
   end

@@ -1,5 +1,5 @@
 struct CHD{K, V} <:AbstractDict{K, V}
-  slots ::Vector{UInt8}
+  slots ::Vector{Bool}
   keys ::Vector{K}
   vals ::Vector{V}
   count ::Int
@@ -12,25 +12,30 @@ end
 one-based. negative means not found
 """
 function chd_keyindex(c ::CHD{K, V}, key ::K) ::Int where {K, V}
-  r0 = c.r[1]
-  h = hash(key) ⊻ r0
-  i = h % UInt64(length(c.indices))
+  #r0 = c.r[1]
+  #h = hash(key) ⊻ r0
+  #i = h % UInt64(length(c.indices))
+  #@inbounds ri = c.indices[i+1]
+
+  h = hash(key)
+  i = h & (UInt64(length(c.indices))-1)
   @inbounds ri = c.indices[i+1]
 
   ri >= UInt16(length(c.r)) && return -1
 
   @inbounds r = c.r[ri+1]
-  ti = (h ⊻ r) % UInt64(length(c.keys))
+  #ti = (h ⊻ r) % UInt64(length(c.keys))
+  ti = Base.hash_64_64(h ⊻ r) & (UInt64(length(c.keys))-1)
 
-  @inbounds (c.slots[ti+1] == 0x0) && return -1
-  @inbounds (c.keys[ti+1] != key) && return -1
+  #@inbounds (!c.slots[ti+1]) && return -1
+  @inbounds (c.keys[ti+1] !== key) && !isequal(key, c.keys[ti+1]) && return -1
 
   return ti+1
 end
 
 @inline function Base.getindex(c ::CHD{K, V}, key) where {K, V}
   ti = chd_keyindex(c, K(key))
-  ti <= 0 && throw(KeyError("key $key not found"))
+  ti <= 0 && throw(KeyError(key))
   @inbounds return c.vals[ti]
 end
 

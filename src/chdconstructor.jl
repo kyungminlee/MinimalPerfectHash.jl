@@ -1,21 +1,36 @@
 import Primes
 
+function next_pow2(n ::UInt64)
+  w = sizeof(UInt64)*8
+  for i in 0:(w-1)
+    if (one(UInt64) << i) >= n
+      return (one(UInt64) << i)
+    end
+  end
+  throw(OverflowError("n too large"))
+end
+
+
 function CHD{K, V}(kv;
+                   default_value::V=~zero(V),
                    max_collisions::Integer=16777216,
                    gamma::Real=1.25,
                    check_duplicates::Bool=true) where {K, V}
   !(gamma >= 1.0) && throw(ArgumentError("gamma needs to be no less than 1"))
   count = length(kv)
-  n ::UInt64 = max(17, UInt64(ceil(count * gamma)))
-  n < count && throw(OverflowError("count * gamma is bigger than typemax(UInt64)"))
-  #@info "Finding nextprime($n)"
-  n = Primes.nextprime(n)
-  #@info "The prime is $n"
-  m ::UInt64 = Primes.nextprime(n ÷ 2)
+  # n ::UInt64 = max(17, UInt64(ceil(count * gamma)))
+  # n < count && throw(OverflowError("count * gamma is bigger than typemax(UInt64)"))
+  # n = Primes.nextprime(n)
+  # m ::UInt64 = Primes.nextprime(n ÷ 2)
 
-  slots = zeros(UInt8, n)
+  n ::UInt64 = max(16, next_pow2(UInt64(ceil(count * gamma))))
+  n < count && throw(OverflowError("count * gamma is bigger than typemax(UInt64)"))
+  m ::UInt64 = n >> 1
+
+  slots = zeros(Bool, n)
   keys = Vector{K}(undef, n)
   vals = Vector{V}(undef, n)
+  fill!(vals, default_value)
   hasher = ChdHasher(n, m)
   buckets = [Bucket{K, V}(0, [], []) for i in 1:m]
   indices = [~UInt16(0) for i in 1:m]

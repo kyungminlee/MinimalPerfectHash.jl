@@ -18,11 +18,13 @@ function ChdHasher(size ::UInt64, buckets ::UInt64; rng ::Random.AbstractRNG=Ran
 end
 
 function hash_index_from_key(h ::ChdHasher, k ::K) ::UInt64 where K
-  return (hash(k) ⊻ h.r[1]) % h.buckets
+  #return (hash(k) ⊻ h.r[1]) % h.buckets
+  return (hash(k)) & (h.buckets-1)
 end
 
 function table(h ::ChdHasher, r ::UInt64, k ::K) ::UInt64 where K
-  return ( (hash(k) ⊻ h.r[1]) ⊻ r) % h.size
+  #return ( (hash(k) ⊻ h.r[1]) ⊻ r) % h.size
+  return Base.hash_64_64(hash(k) ⊻ r) & (h.size-1)
 end
 
 function generate(c ::ChdHasher) :: Tuple{UInt16, UInt64}
@@ -33,7 +35,7 @@ function try_hash(
     hasher ::ChdHasher,
     seen ::Set{UInt64},
 
-    slots ::Vector{UInt8},
+    slots ::Vector{Bool},
     keys ::Vector{K},
     vals ::Vector{V},
     indices ::Vector{UInt16},
@@ -55,7 +57,7 @@ function try_hash(
   indices[bucket.index+1] = ri
 
   for (i, h) in enumerate(hashes)
-    slots[h+1] = 0x1
+    slots[h+1] = true
     keys[h+1] = bucket.keys[i]
     vals[h+1] = bucket.vals[i]
   end

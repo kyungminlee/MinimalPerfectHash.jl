@@ -1,13 +1,19 @@
 import Primes
 
 function CHD{K, V}(kv;
-                   max_collisions::Integer=16777216) where {K, V}
+                   max_collisions::Integer=16777216,
+                   gamma::Real=1.25,
+                   check_duplicates::Bool=true) where {K, V}
+  !(gamma >= 1.0) && throw(ArgumentError("gamma needs to be no less than 1"))
   count = length(kv)
-  n ::UInt64 = max(17, UInt64(count))
+  n ::UInt64 = max(17, UInt64(ceil(count * gamma)))
+  n < count && throw(OverflowError("count * gamma is bigger than typemax(UInt64)"))
+  #@info "Finding nextprime($n)"
   n = Primes.nextprime(n)
-  m ::UInt64 = n ÷ 2
+  #@info "The prime is $n"
+  m ::UInt64 = Primes.nextprime(n ÷ 2)
 
-  slots = zeros(Bool, n)
+  slots = zeros(UInt8, n)
   keys = Vector{K}(undef, n)
   vals = Vector{V}(undef, n)
   hasher = ChdHasher(n, m)
@@ -15,26 +21,34 @@ function CHD{K, V}(kv;
   indices = [~UInt16(0) for i in 1:m]
 
   seen = Set{UInt64}()
-  duplicates = Set{K}()
+
+  if check_duplicates
+    duplicates = Set{K}()
+    for (key, val) in kv
+      (key in duplicates) && throw(ArgumentError("duplicate key $(string(key))"))
+      push!(duplicates, key)
+    end
+  end
 
   for (key, val) in kv
-    (key in duplicates) && throw(ArgumentError("duplicate key $(string(key))"))
-    push!(duplicates, key)
-
     oh = hash_index_from_key(hasher, key)
-    buckets[oh+1].index = oh
-    push!(buckets[oh+1].keys, key)
-    push!(buckets[oh+1].vals, val)
+    @inbounds bucket = buckets[oh+1]
+    bucket.index = oh
+    push!(bucket.keys, key)
+    push!(bucket.vals, val)
   end
+
+  filter!((arg::Bucket{K,V}) -> !isempty(arg.keys), buckets)
 
   collisions = 0
   sort!(buckets;
-        lt=(lhs::Bucket{K,V}, rhs::Bucket{K,V}) -> length(lhs.keys) < length(rhs.keys),
-        rev=true)
+        lt=(lhs::Bucket{K,V}, rhs::Bucket{K,V}) -> length(lhs.keys) < length(rhs.keys))
 
   # resolve each bucket
-  for (i, bucket) in enumerate(buckets)
-    isempty(bucket.keys) && continue
+  i = 0
+  while !isempty(buckets)
+    i += 1
+    bucket = pop!(buckets)
     next_bucket = false
 
     for (ri, r) in enumerate(hasher.r)
@@ -92,6 +106,6 @@ end
 
 CHD(; kwargs...) = CHD{Any, Any}(; kwargs...)
 CHD(kv::Tuple{}; kwargs...) = CHD(; kwargs...)
-copy(d::CHD{K,V}) where {K, V} = CHD{K, V}(copy(d.slots), copy(d.keys), copy(d.vals), d.count, copy(d.r), copy(d.indices))
+copy(d::CHD{K,V}) where {K, V} = CHD{K, V}(copy(d.slots), Base.copy(d.keys), copy(d.vals), d.count, copy(d.r), copy(d.indices))
 CHD(ps::Pair{K, V}...; kwargs...) where {K, V} = CHD{K, V}(ps; kwargs...)
 CHD(ps::Pair...; kwargs...)                    = CHD(ps; kwargs...)

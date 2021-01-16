@@ -2,7 +2,21 @@
 
 [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://kyungminlee.github.io/MinimalPerfectHash.jl/stable)
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://kyungminlee.github.io/MinimalPerfectHash.jl/dev)
-[![Build Status](https://travis-ci.org/kyungminlee/MinimalPerfectHash.jl.svg?branch=master)](https://travis-ci.org/kyungminlee/MinimalPerfectHash.jl)
-[![Build Status](https://ci.appveyor.com/api/projects/status/github/kyungminlee/MinimalPerfectHash.jl?svg=true)](https://ci.appveyor.com/project/kyungminlee/MinimalPerfectHash-jl)
+
+[![Build](https://github.com/kyungminlee/MinimalPerfectHash.jl/workflows/Build/badge.svg)](https://github.com/kyungminlee/MinimalPerfectHash.jl/actions?query=workflow%3ABuild)
+
 [![Codecov](https://codecov.io/gh/kyungminlee/MinimalPerfectHash.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/kyungminlee/MinimalPerfectHash.jl)
-[![Coveralls](https://coveralls.io/repos/github/kyungminlee/MinimalPerfectHash.jl/badge.svg?branch=master)](https://coveralls.io/github/kyungminlee/MinimalPerfectHash.jl?branch=master)
+
+## Usage
+
+```julia-repl
+julia> using MinimalPerfectHash
+
+julia> chd = CHD("elephant"=>10, "giraffe"=>17)
+CHD{String,Int64} with 2 entries:
+  "elephant" => 10
+  "giraffe"  => 17
+
+julia> chd["elephant"]
+10
+```

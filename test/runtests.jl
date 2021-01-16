@@ -62,4 +62,24 @@ using Random
         end
     end
 
+    let K=Int, V=Int, n=(1<<3)
+        ks = sort(unique(Random.rand(K, n)))
+        vs = rand(V, length(ks))
+        chd = MinimalPerfectHash.CHD((k, v) for (k, v) in zip(ks, vs))
+        chd = MinimalPerfectHash.CHD{K, V}((k, v) for (k, v) in zip(ks, vs))
+
+        @test all(haskey(chd, k) for k in ks)
+        @test all((k => v) in chd for (k, v) in zip(ks, vs))
+        @test all(chd[k] == v for (k, v) in zip(ks, vs))
+        @test length(chd) == length(ks)
+        @test all(get(chd, k, nothing) == v for (k, v) in zip(ks, vs))
+        @test all(getkey(chd, k, nothing) == k for k in ks)
+        @test all(k in keys(chd) for k in ks)
+        if n == 0
+            @test isempty(chd)
+        else
+            @test sum(1 for (_, _) in chd) == length(ks)
+        end
+    end
+
 end

@@ -10,7 +10,6 @@ makedocs(;
     pages=[
         "Home" => "index.md",
     ],
-    assets=String[],
 )
 
 deploydocs(;

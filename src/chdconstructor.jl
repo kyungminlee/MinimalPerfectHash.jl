@@ -8,9 +8,7 @@ function CHD{K, V}(kv;
   count = length(kv)
   n ::UInt64 = max(17, UInt64(ceil(count * gamma)))
   n < count && throw(OverflowError("count * gamma is bigger than typemax(UInt64)"))
-  #@info "Finding nextprime($n)"
   n = Primes.nextprime(n)
-  #@info "The prime is $n"
   m ::UInt64 = Primes.nextprime(n ÷ 2)
 
   slots = zeros(UInt8, n)
@@ -105,7 +103,7 @@ function CHD(kv; kwargs...)
 end
 
 CHD(; kwargs...) = CHD{Any, Any}(; kwargs...)
-CHD(kv::Tuple{}; kwargs...) = CHD(; kwargs...)
+CHD(::Tuple{}; kwargs...) = CHD(; kwargs...)
 copy(d::CHD{K,V}) where {K, V} = CHD{K, V}(copy(d.slots), Base.copy(d.keys), copy(d.vals), d.count, copy(d.r), copy(d.indices))
 CHD(ps::Pair{K, V}...; kwargs...) where {K, V} = CHD{K, V}(ps; kwargs...)
 CHD(ps::Pair...; kwargs...)                    = CHD(ps; kwargs...)
